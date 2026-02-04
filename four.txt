@@ -1,6 +1,5 @@
 fourth 
 changes made in development bracnh
 changes made in staging second time 
-
-changes made in main , merge conflict will appear when pull 
+merge conflit changes made in remote repo 
 
