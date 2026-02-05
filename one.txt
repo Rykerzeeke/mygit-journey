@@ -1,7 +1,4 @@
-one
+One
 Changed in the main bracnh commit 
 changes made in the remote repo (github)
-
-second update form remote repo
-
-new feature
+second update form remote repo 
