@@ -1,7 +1,7 @@
 import requests
 
 # We need coordinates to get weather data
-latitude = 28.384984   # Paris latitude
+latitude = 28.111111   # Paris latitude
 longitude = 77.021694   # Paris longitude
 
 # Build the API URL with our parameters
