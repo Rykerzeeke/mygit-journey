@@ -1,0 +1,37 @@
+name: CI-CD Pipeline
+
+on:
+  push:
+    branches:
+      - todo
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Use Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Test app starts
+        run: |
+          node server.js 5000 &
+          sleep 5
+          curl -f http://localhost:5000 || exit 1
+
+      - name: Deploy to staging via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            ~/deploy-scripts/deploy-staging.sh
