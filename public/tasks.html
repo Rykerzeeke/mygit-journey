@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Task Checksheet</title>
+  <link rel="stylesheet" href="task-grid.css" />
+</head>
+<body>
+  <main class="app">
+    <header class="hero">
+      <div class="title-group">
+        <p class="kicker">Daily Grid</p>
+        <h1>Task Checksheet</h1>
+        <p class="subtitle">Track daily habits in a spreadsheet-style grid.</p>
+      </div>
+      <div class="month-controls">
+        <button class="ghost" id="prevMonth">Prev</button>
+        <div class="month-label" id="monthLabel">Month</div>
+        <button class="ghost" id="nextMonth">Next</button>
+        <button id="todayBtn">Today</button>
+      </div>
+    </header>
+
+    <section class="controls">
+      <div class="input-wrap">
+        <input id="taskInput" type="text" placeholder="Add a task (e.g., Walk 30 min)" />
+        <button id="addTaskBtn">Add Task</button>
+      </div>
+      <div class="progress-card">
+        <div class="progress-pie" id="progressPie" aria-label="Monthly progress pie"></div>
+        <div class="progress-text">
+          <strong id="progressPercent">0%</strong>
+          <span id="progressCount">0 / 0 checks</span>
+        </div>
+      </div>
+      <div class="legend">
+        <span class="legend-chip">Sticky task column</span>
+        <span class="legend-chip today">Today highlighted</span>
+      </div>
+    </section>
+
+    <section class="sheet-card">
+      <div class="sheet-scroll">
+        <table class="sheet" id="sheetTable">
+          <colgroup id="sheetCols"></colgroup>
+          <thead id="sheetHead"></thead>
+          <tbody id="sheetBody"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="footer-actions">
+      <a class="ghost-link" href="/dashboard.html">Profile</a>
+      <button class="ghost" id="logoutBtn">Log out</button>
+    </section>
+  </main>
+
+  <script src="task-grid.js"></script>
+</body>
+</html>

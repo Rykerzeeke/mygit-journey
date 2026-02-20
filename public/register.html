@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Register | Daily Check-in</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <main class="auth-shell">
+    <section class="auth-card">
+      <header>
+        <p class="kicker">Daily Check-in</p>
+        <h1>Create your account</h1>
+        <p class="muted">Your login is your daily check-in.</p>
+      </header>
+      <form id="registerForm" class="auth-form">
+        <label>
+          Username
+          <input type="text" name="username" required />
+        </label>
+        <label>
+          Password
+          <input type="password" name="password" required />
+        </label>
+        <label>
+          Phone number
+          <input type="text" name="phoneNumber" placeholder="+1 555 010 1000" required />
+        </label>
+        <label>
+          Telegram chat ID (optional)
+          <input type="text" name="telegramChatId" placeholder="123456789" />
+          <span class="hint">Open Telegram, start your bot, then read the chat ID in the bot settings.</span>
+        </label>
+        <button type="submit">Register</button>
+        <p class="form-note" id="registerMessage"></p>
+      </form>
+      <footer class="auth-footer">
+        <span class="muted">Already have an account?</span>
+        <a href="/login.html">Log in</a>
+      </footer>
+    </section>
+  </main>
+  <script src="auth.js"></script>
+</body>
+</html>

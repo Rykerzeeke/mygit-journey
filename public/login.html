@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Login | Daily Check-in</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <main class="auth-shell">
+    <section class="auth-card">
+      <header>
+        <p class="kicker">Daily Check-in</p>
+        <h1>Welcome back</h1>
+        <p class="muted">Log in to track your check-ins and tasks.</p>
+      </header>
+      <form id="loginForm" class="auth-form">
+        <label>
+          Username
+          <input type="text" name="username" required />
+        </label>
+        <label>
+          Password
+          <input type="password" name="password" required />
+        </label>
+        <button type="submit">Log In</button>
+        <p class="form-note" id="loginMessage"></p>
+      </form>
+      <footer class="auth-footer">
+        <span class="muted">New here?</span>
+        <a href="/register.html">Create an account</a>
+      </footer>
+    </section>
+  </main>
+  <script src="auth.js"></script>
+</body>
+</html>
