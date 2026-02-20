@@ -36,6 +36,6 @@ app.use("/api/telegram", telegramRoutes);
 
 const PORT = process.argv[2] || process.env.PORT || 3000;
 
-app.listen(PORT, () => {
-  console.log("Server running on port", PORT);
+app.listen(PORT, "0.0.0.0", () => {
+  console.log(`Server running on port ${PORT}`);
 });
