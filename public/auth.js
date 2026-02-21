@@ -12,17 +12,7 @@ async function postJSON(url, data) {
 }
 
 async function redirectAfterAuth() {
-  try {
-    const res = await fetch("/api/auth/me");
-    const data = await res.json();
-    if (data?.user?.telegramChatId) {
-      window.location.href = "/tasks.html";
-    } else {
-      window.location.href = "/dashboard.html";
-    }
-  } catch (_err) {
-    window.location.href = "/dashboard.html";
-  }
+  window.location.href = "/tasks.html";
 }
 
 const loginForm = document.getElementById("loginForm");
@@ -57,9 +47,7 @@ if (registerForm) {
     try {
       await postJSON("/api/auth/register", {
         username: formData.get("username"),
-        password: formData.get("password"),
-        phoneNumber: formData.get("phoneNumber"),
-        telegramChatId: formData.get("telegramChatId")
+        password: formData.get("password")
       });
       await redirectAfterAuth();
     } catch (err) {

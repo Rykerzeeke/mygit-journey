@@ -19,20 +19,20 @@ function sanitizeUser(row) {
 
 router.post("/register", async (req, res) => {
   const { username, password, phoneNumber, telegramChatId } = req.body || {};
-  if (!username || !password || !phoneNumber) {
-    return res.status(400).json({ message: "Username, password, and phone number are required." });
+  if (!username || !password) {
+    return res.status(400).json({ message: "User ID and password are required." });
   }
 
   try {
     const [existing] = await pool.query("SELECT id FROM users WHERE username = ?", [username]);
     if (existing.length > 0) {
-      return res.status(409).json({ message: "Username already taken." });
+      return res.status(409).json({ message: "User ID already taken." });
     }
 
     const passwordHash = await bcrypt.hash(password, 12);
     const [result] = await pool.query(
       "INSERT INTO users (username, password_hash, phone_number, telegram_chat_id, is_admin) VALUES (?, ?, ?, ?, 0)",
-      [username, passwordHash, phoneNumber, telegramChatId || null]
+      [username, passwordHash, phoneNumber || null, telegramChatId || null]
     );
 
     req.session.userId = result.insertId;
@@ -46,7 +46,7 @@ router.post("/register", async (req, res) => {
 router.post("/login", async (req, res) => {
   const { username, password } = req.body || {};
   if (!username || !password) {
-    return res.status(400).json({ message: "Username and password are required." });
+    return res.status(400).json({ message: "User ID and password are required." });
   }
 
   try {
@@ -91,14 +91,12 @@ router.get("/me", requireAuth, async (req, res) => {
 
 router.put("/profile", requireAuth, async (req, res) => {
   const { phoneNumber, telegramChatId } = req.body || {};
-  if (!phoneNumber) {
-    return res.status(400).json({ message: "Phone number is required." });
-  }
 
   try {
+    const normalizedPhone = phoneNumber ? String(phoneNumber).trim() : null;
     await pool.query(
       "UPDATE users SET phone_number = ?, telegram_chat_id = ? WHERE id = ?",
-      [phoneNumber, telegramChatId || null, req.session.userId]
+      [normalizedPhone || null, telegramChatId || null, req.session.userId]
     );
     return res.json({ message: "Profile updated" });
   } catch (err) {

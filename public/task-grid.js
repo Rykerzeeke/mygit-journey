@@ -3,6 +3,10 @@ async function fetchJSON(url, options = {}) {
     headers: { "Content-Type": "application/json" },
     ...options
   });
+  if (res.status === 401) {
+    window.location.href = "/login.html";
+    throw new Error("Unauthorized");
+  }
   const payload = await res.json().catch(() => ({}));
   if (!res.ok) {
     throw new Error(payload.message || "Request failed");
