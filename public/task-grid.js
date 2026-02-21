@@ -1,18 +1,5 @@
-async function fetchJSON(url, options = {}) {
-  const res = await fetch(url, {
-    headers: { "Content-Type": "application/json" },
-    ...options
-  });
-  if (res.status === 401) {
-    window.location.href = "/login.html";
-    throw new Error("Unauthorized");
-  }
-  const payload = await res.json().catch(() => ({}));
-  if (!res.ok) {
-    throw new Error(payload.message || "Request failed");
-  }
-  return payload;
-}
+const TASKS_KEY = "task-checker-tasks";
+const CHECKS_PREFIX = "task-checker-checks";
 
 const els = {
   monthLabel: document.getElementById("monthLabel"),
@@ -26,8 +13,7 @@ const els = {
   sheetBody: document.getElementById("sheetBody"),
   progressPie: document.getElementById("progressPie"),
   progressPercent: document.getElementById("progressPercent"),
-  progressCount: document.getElementById("progressCount"),
-  logoutBtn: document.getElementById("logoutBtn")
+  progressCount: document.getElementById("progressCount")
 };
 
 let currentMonth = new Date();
@@ -52,30 +38,58 @@ function todayInfo(){
   return { y: now.getFullYear(), m: now.getMonth(), d: now.getDate() };
 }
 
-function toDateString(date, day){
-  const y = date.getFullYear();
-  const m = String(date.getMonth() + 1).padStart(2, "0");
-  const d = String(day).padStart(2, "0");
-  return `${y}-${m}-${d}`;
+function loadTasks(){
+  const raw = localStorage.getItem(TASKS_KEY);
+  if (!raw) return [];
+  try {
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch (_err) {
+    return [];
+  }
 }
 
-async function loadMonthData(key){
-  const [tasks, checksRes] = await Promise.all([
-    fetchJSON("/api/tasks"),
-    fetchJSON(`/api/checks?month=${key}`)
-  ]);
+function saveTasks(tasks){
+  localStorage.setItem(TASKS_KEY, JSON.stringify(tasks));
+}
 
-  const checks = {};
-  (checksRes.checks || []).forEach((row) => {
-    const day = new Date(row.check_date).getDate();
-    if (!checks[row.task_id]) checks[row.task_id] = {};
-    checks[row.task_id][day] = true;
+function checksKey(month){
+  return `${CHECKS_PREFIX}-${month}`;
+}
+
+function loadChecks(month){
+  const raw = localStorage.getItem(checksKey(month));
+  if (!raw) return {};
+  try {
+    const parsed = JSON.parse(raw);
+    return parsed && typeof parsed === "object" ? parsed : {};
+  } catch (_err) {
+    return {};
+  }
+}
+
+function saveChecks(month, checks){
+  localStorage.setItem(checksKey(month), JSON.stringify(checks));
+}
+
+function newId(){
+  if (typeof crypto !== "undefined" && crypto.randomUUID) return crypto.randomUUID();
+  return `id-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
+}
+
+function removeTaskChecks(taskId){
+  Object.keys(localStorage).forEach((key) => {
+    if (!key.startsWith(`${CHECKS_PREFIX}-`)) return;
+    try {
+      const parsed = JSON.parse(localStorage.getItem(key) || "{}");
+      if (!parsed || typeof parsed !== "object") return;
+      if (!(taskId in parsed)) return;
+      delete parsed[taskId];
+      localStorage.setItem(key, JSON.stringify(parsed));
+    } catch (_err) {
+      // Ignore malformed localStorage values.
+    }
   });
-
-  return {
-    tasks: tasks.map((t) => ({ id: t.id, name: t.title })),
-    checks
-  };
 }
 
 function calcProgress(data, days){
@@ -155,27 +169,31 @@ function buildRow(task, days, data, today){
   renameBtn.className = "icon-btn";
   renameBtn.type = "button";
   renameBtn.textContent = "Rename";
-  renameBtn.addEventListener("click", async () => {
+  renameBtn.addEventListener("click", () => {
     const next = prompt("Rename task", task.name);
     if (!next) return;
     const trimmed = next.trim();
     if (!trimmed) return;
-    await fetchJSON(`/api/tasks/${task.id}`, {
-      method: "PUT",
-      body: JSON.stringify({ title: trimmed })
-    });
-    await render();
+
+    const tasks = loadTasks();
+    const index = tasks.findIndex((t) => t.id === task.id);
+    if (index === -1) return;
+    tasks[index].name = trimmed;
+    saveTasks(tasks);
+    render();
   });
 
   const delBtn = document.createElement("button");
   delBtn.className = "icon-btn";
   delBtn.type = "button";
   delBtn.textContent = "Delete";
-  delBtn.addEventListener("click", async () => {
+  delBtn.addEventListener("click", () => {
     const ok = confirm(`Delete task "${task.name}"?`);
     if (!ok) return;
-    await fetchJSON(`/api/tasks/${task.id}`, { method: "DELETE" });
-    await render();
+    const tasks = loadTasks().filter((t) => t.id !== task.id);
+    saveTasks(tasks);
+    removeTaskChecks(task.id);
+    render();
   });
 
   actions.appendChild(renameBtn);
@@ -198,24 +216,11 @@ function buildRow(task, days, data, today){
     const checked = data.checks?.[task.id]?.[day];
     checkbox.checked = Boolean(checked);
 
-    checkbox.addEventListener("change", async () => {
+    checkbox.addEventListener("change", () => {
       if (!data.checks[task.id]) data.checks[task.id] = {};
       data.checks[task.id][day] = checkbox.checked;
+      saveChecks(monthKey(currentMonth), data.checks);
       updateProgress(data, days);
-
-      try {
-        await fetchJSON("/api/checks", {
-          method: "POST",
-          body: JSON.stringify({
-            taskId: task.id,
-            date: toDateString(currentMonth, day),
-            checked: checkbox.checked
-          })
-        });
-      } catch (err) {
-        alert(err.message);
-        await render();
-      }
     });
 
     td.appendChild(checkbox);
@@ -225,18 +230,14 @@ function buildRow(task, days, data, today){
   return tr;
 }
 
-async function render(){
+function render(){
   const days = daysInMonth(currentMonth);
   const key = monthKey(currentMonth);
   const today = todayInfo();
-
-  let data;
-  try {
-    data = await loadMonthData(key);
-  } catch (err) {
-    window.location.href = "/login.html";
-    return;
-  }
+  const data = {
+    tasks: loadTasks(),
+    checks: loadChecks(key)
+  };
 
   els.monthLabel.textContent = monthLabel(currentMonth);
   updateProgress(data, days);
@@ -262,15 +263,14 @@ async function render(){
   });
 }
 
-els.addTaskBtn.addEventListener("click", async () => {
+els.addTaskBtn.addEventListener("click", () => {
   const name = els.taskInput.value.trim();
   if (!name) return;
-  await fetchJSON("/api/tasks", {
-    method: "POST",
-    body: JSON.stringify({ title: name })
-  });
+  const tasks = loadTasks();
+  tasks.push({ id: newId(), name });
+  saveTasks(tasks);
   els.taskInput.value = "";
-  await render();
+  render();
 });
 
 els.taskInput.addEventListener("keydown", (event) => {
@@ -291,11 +291,6 @@ els.todayBtn.addEventListener("click", () => {
   currentMonth = new Date();
   currentMonth.setDate(1);
   render();
-});
-
-els.logoutBtn.addEventListener("click", async () => {
-  await fetchJSON("/api/auth/logout", { method: "POST" });
-  window.location.href = "/login.html";
 });
 
 render();
