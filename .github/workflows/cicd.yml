@@ -1,0 +1,60 @@
+name: CI-CD Pipeline
+
+on:
+  push:
+    branches:
+      - todo   # auto staging deploy
+  workflow_dispatch:   # manual production button
+
+jobs:
+
+  #########################################
+  # STAGING AUTO DEPLOY
+  #########################################
+  deploy-staging:
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Use Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install deps
+        run: npm install
+
+      - name: Test server boots
+        run: |
+          node server.js 5000 &
+          sleep 5
+          curl -f http://localhost:5000 || exit 1
+
+      - name: SSH Deploy Staging
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ubuntu
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            ~/deploy-scripts/deploy-staging.sh
+
+  #########################################
+  # PRODUCTION MANUAL BUTTON
+  #########################################
+  deploy-production:
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: SSH Deploy Production
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ubuntu
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            ~/deploy-scripts/deploy-production.sh
