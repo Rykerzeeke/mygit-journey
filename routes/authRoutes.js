@@ -30,9 +30,10 @@ router.post("/register", async (req, res) => {
     }
 
     const passwordHash = await bcrypt.hash(password, 12);
+    const normalizedPhone = phoneNumber ? String(phoneNumber).trim() : null;
     const [result] = await pool.query(
       "INSERT INTO users (username, password_hash, phone_number, telegram_chat_id, is_admin) VALUES (?, ?, ?, ?, 0)",
-      [username, passwordHash, phoneNumber || null, telegramChatId || null]
+      [username, passwordHash, normalizedPhone || null, telegramChatId || null]
     );
 
     req.session.userId = result.insertId;
