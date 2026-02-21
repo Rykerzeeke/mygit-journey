@@ -30,10 +30,11 @@ router.post("/register", async (req, res) => {
     }
 
     const passwordHash = await bcrypt.hash(password, 12);
-    const normalizedPhone = phoneNumber ? String(phoneNumber).trim() : null;
+    const normalizedPhone = phoneNumber ? String(phoneNumber).trim() : "";
+    const normalizedTelegram = telegramChatId ? String(telegramChatId).trim() : "";
     const [result] = await pool.query(
       "INSERT INTO users (username, password_hash, phone_number, telegram_chat_id, is_admin) VALUES (?, ?, ?, ?, 0)",
-      [username, passwordHash, normalizedPhone || null, telegramChatId || null]
+      [username, passwordHash, normalizedPhone, normalizedTelegram]
     );
 
     req.session.userId = result.insertId;
@@ -94,10 +95,11 @@ router.put("/profile", requireAuth, async (req, res) => {
   const { phoneNumber, telegramChatId } = req.body || {};
 
   try {
-    const normalizedPhone = phoneNumber ? String(phoneNumber).trim() : null;
+    const normalizedPhone = phoneNumber ? String(phoneNumber).trim() : "";
+    const normalizedTelegram = telegramChatId ? String(telegramChatId).trim() : "";
     await pool.query(
       "UPDATE users SET phone_number = ?, telegram_chat_id = ? WHERE id = ?",
-      [normalizedPhone || null, telegramChatId || null, req.session.userId]
+      [normalizedPhone, normalizedTelegram, req.session.userId]
     );
     return res.json({ message: "Profile updated" });
   } catch (err) {
